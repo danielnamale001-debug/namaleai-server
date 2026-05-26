@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: namaleai-server
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
