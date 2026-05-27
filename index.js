@@ -11,8 +11,8 @@ const CONSUMER_KEY    = 'KHOnPlA6ChibfnE6tv8HZAqz3q2FOlQtdps5HqvVOZ2PooSE';
 const CONSUMER_SECRET = 'ifRFemd1o1tLt9GeyHasaaUE5MAtG8j1eem6DAMuwNKr3GFGz1wZIIHLturNtw3u';
 const PASSKEY         = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
 const TILL_NUMBER     = '9218400';
-const SHORTCODE       = '174379';
-const BASE_URL        = 'https://sandbox.safaricom.co.ke';
+const SHORTCODE       = '9218400'; // Your actual till number as shortcode
+const BASE_URL        = 'https://api.safaricom.co.ke'; // Production URL
 
 async function getAccessToken() {
   const auth = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
@@ -60,8 +60,14 @@ app.post('/api/stkpush', async (req, res) => {
     );
     res.json(response.data);
   } catch (err) {
-    console.error('STK Push error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    const errData = err.response?.data;
+    // If response is HTML (Safaricom error page), return a clean message
+    const isHtml = typeof errData === 'string' && errData.trim().startsWith('<');
+    const message = isHtml
+      ? 'Payment failed. Please check your phone number and try again.'
+      : (errData?.errorMessage || errData?.error?.message || err.message || 'Payment failed.');
+    console.error('STK Push error:', errData || err.message);
+    res.status(500).json({ error: message });
   }
 });
 
